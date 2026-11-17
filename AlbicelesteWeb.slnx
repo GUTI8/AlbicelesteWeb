@@ -1,3 +1,5 @@
 <Solution>
   <Project Path="AlbicelesteWeb.Data/AlbicelesteWeb.Data.csproj" />
+  <Project Path="AlbicelesteWeb.Importer/AlbicelesteWeb.Importer.csproj" />
 </Solution>
+
