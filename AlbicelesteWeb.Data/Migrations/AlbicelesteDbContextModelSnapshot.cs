@@ -22,6 +22,34 @@ namespace AlbicelesteWeb.Data.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("AlbicelesteWeb.Data.Entities.Club", b =>
+                {
+                    b.Property<int>("ClubId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CoachName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DomesticCompetitionId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("StadiumName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("StadiumSeats")
+                        .HasColumnType("int");
+
+                    b.HasKey("ClubId");
+
+                    b.HasIndex("DomesticCompetitionId");
+
+                    b.ToTable("Clubs");
+                });
+
             modelBuilder.Entity("AlbicelesteWeb.Data.Entities.Competition", b =>
                 {
                     b.Property<string>("CompetitionId")
@@ -53,6 +81,9 @@ namespace AlbicelesteWeb.Data.Migrations
                     b.Property<string>("CurrentClubDomesticCompetitionId")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("CurrentClubId")
+                        .HasColumnType("int");
+
                     b.Property<string>("CurrentClubName")
                         .HasColumnType("nvarchar(max)");
 
@@ -81,7 +112,37 @@ namespace AlbicelesteWeb.Data.Migrations
 
                     b.HasKey("PlayerId");
 
+                    b.HasIndex("CurrentClubId");
+
                     b.ToTable("Players");
+                });
+
+            modelBuilder.Entity("AlbicelesteWeb.Data.Entities.Club", b =>
+                {
+                    b.HasOne("AlbicelesteWeb.Data.Entities.Competition", "DomesticCompetition")
+                        .WithMany("Clubs")
+                        .HasForeignKey("DomesticCompetitionId");
+
+                    b.Navigation("DomesticCompetition");
+                });
+
+            modelBuilder.Entity("AlbicelesteWeb.Data.Entities.Player", b =>
+                {
+                    b.HasOne("AlbicelesteWeb.Data.Entities.Club", "CurrentClub")
+                        .WithMany("Players")
+                        .HasForeignKey("CurrentClubId");
+
+                    b.Navigation("CurrentClub");
+                });
+
+            modelBuilder.Entity("AlbicelesteWeb.Data.Entities.Club", b =>
+                {
+                    b.Navigation("Players");
+                });
+
+            modelBuilder.Entity("AlbicelesteWeb.Data.Entities.Competition", b =>
+                {
+                    b.Navigation("Clubs");
                 });
 #pragma warning restore 612, 618
         }

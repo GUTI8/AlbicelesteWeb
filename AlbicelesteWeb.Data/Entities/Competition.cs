@@ -6,4 +6,5 @@ public class Competition
     public string Name { get; set; } = "";
     public string? CountryName { get; set; }
     public string? Type { get; set; }
+    public List<Club> Clubs { get; set; } = new();
 }

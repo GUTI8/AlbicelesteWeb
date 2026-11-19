@@ -13,5 +13,7 @@ public class Player
     public int LastSeason { get; set; }
     public string? CurrentClubDomesticCompetitionId { get; set; }
     public string? Foot { get; set; }
+    public int? CurrentClubId { get; set; }      // foreign key → Club
+    public Club? CurrentClub { get; set; }       // navigation property
     
 }
