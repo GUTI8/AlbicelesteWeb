@@ -35,3 +35,17 @@ public class PlayerCsv
     public decimal? MarketValueInEur { get; set; }
     public int LastSeason { get; set; }
 }
+
+public class AppearanceCsv
+{
+    public string AppearanceId { get; set; } = "";
+    public int GameId { get; set; }
+    public int PlayerId { get; set; }
+    public DateTime Date { get; set; }
+    public string? CompetitionId { get; set; }
+    public int Goals { get; set; }
+    public int Assists { get; set; }
+    public int MinutesPlayed { get; set; }
+    public int YellowCards { get; set; }
+    public int RedCards { get; set; }
+}

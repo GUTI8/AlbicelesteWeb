@@ -3,7 +3,10 @@ using AlbicelesteWeb.Data;
 using AlbicelesteWeb.Data.Entities;
 using AlbicelesteWeb.Importer;
 using Microsoft.EntityFrameworkCore;
+using System.Data;
+using Microsoft.Data.SqlClient;
 
+Console.OutputEncoding = System.Text.Encoding.UTF8;
 // =====================================================================
 // AlbicelesteWeb.Importer
 // Reads the Transfermarkt CSV files and loads them into the database.
@@ -23,6 +26,9 @@ string dataFolder = Path.Combine(AppContext.BaseDirectory, "data");
 var competitionRows = CsvLoader.Load<CompetitionCsv>(Path.Combine(dataFolder, "competitions.csv"));
 var clubRows        = CsvLoader.Load<ClubCsv>(Path.Combine(dataFolder, "clubs.csv"));
 var playerRows      = CsvLoader.Load<PlayerCsv>(Path.Combine(dataFolder, "players.csv"));
+var appearanceRows = CsvLoader.Load<AppearanceCsv>(Path.Combine(dataFolder, "appearances.csv"));
+
+Console.WriteLine($"Read {appearanceRows.Count:N0} appearances");
 
 Console.WriteLine($"Read {competitionRows.Count} competitions, {clubRows.Count} clubs, {playerRows.Count:N0} players");
 
@@ -74,6 +80,26 @@ var players = playerRows.Select(p => new Player
         : null
 }).ToList();
 
+HashSet<int> playerIds = players.Select(p => p.PlayerId).ToHashSet();
+
+var appearances = appearanceRows
+    .Where(a => playerIds.Contains(a.PlayerId))      // skip appearances of players we don't have
+    .Select(a => new Appearance
+    {
+        AppearanceId = a.AppearanceId,
+        GameId = a.GameId,
+        PlayerId = a.PlayerId,
+        Date = a.Date,
+        CompetitionId = a.CompetitionId,
+        Goals = a.Goals,
+        Assists = a.Assists,
+        MinutesPlayed = a.MinutesPlayed,
+        YellowCards = a.YellowCards,
+        RedCards = a.RedCards
+    })
+    .ToList();
+
+Console.WriteLine($"Appearances skipped (unknown player): {appearanceRows.Count - appearances.Count:N0}");
 
 // ---------------------------------------------------------------------
 // 3. Report what had to be cleaned
@@ -101,7 +127,12 @@ var options = new DbContextOptionsBuilder<AlbicelesteDbContext>()
 using var db = new AlbicelesteDbContext(options);
 var sw = Stopwatch.StartNew();
 
-// Delete children first: a club can't be deleted while players still point to it
+db.Appearances.ExecuteDelete();     // NEW: first line of the deletes
+db.Players.ExecuteDelete();
+db.Clubs.ExecuteDelete();
+db.Competitions.ExecuteDelete();
+
+// Delete children : a club can't be deleted while players still point to it
 db.Players.ExecuteDelete();
 db.Clubs.ExecuteDelete();
 db.Competitions.ExecuteDelete();
@@ -113,3 +144,82 @@ db.Players.AddRange(players);
 
 int saved = db.SaveChanges();
 Console.WriteLine($"Saved {saved:N0} rows in {sw.ElapsedMilliseconds:N0} ms");
+
+// ---------------------------------------------------------------------
+// 5. Appearances: 1.7 million rows need a different approach
+// ---------------------------------------------------------------------
+bool useBulkCopy = true;   // run once with false (EF Core), then once with true (SqlBulkCopy), and compare
+
+sw.Restart();
+if (useBulkCopy)
+    BulkInsertAppearances(connectionString, appearances);
+else
+    EfInsertAppearances(options, appearances);
+
+Console.WriteLine($"Inserted {appearances.Count:N0} appearances in {sw.Elapsed.TotalSeconds:N1} s " +
+                  $"({(useBulkCopy ? "SqlBulkCopy" : "EF Core in chunks")})");
+
+
+// ----- Strategy 1: EF Core, 10,000 at a time -----
+static void EfInsertAppearances(DbContextOptions<AlbicelesteDbContext> options, List<Appearance> appearances)
+{
+    using var db = new AlbicelesteDbContext(options);
+    db.ChangeTracker.AutoDetectChangesEnabled = false;   // we only add, so skip change detection
+
+    int done = 0;
+    foreach (var chunk in appearances.Chunk(10_000))
+    {
+        db.Appearances.AddRange(chunk);
+        db.SaveChanges();
+        db.ChangeTracker.Clear();                        // forget them, so memory stays flat
+        done += chunk.Length;
+        Console.WriteLine($"   {done:N0} / {appearances.Count:N0}");
+    }
+}
+
+// ----- Strategy 2: SqlBulkCopy, straight into SQL Server -----
+static void BulkInsertAppearances(string connectionString, List<Appearance> appearances)
+{
+    // SqlBulkCopy reads from a table of rows that matches the database table
+    var table = new DataTable();
+    table.Columns.Add("AppearanceId", typeof(string));
+    table.Columns.Add("GameId", typeof(int));
+    table.Columns.Add("PlayerId", typeof(int));
+    table.Columns.Add("Date", typeof(DateTime));
+    table.Columns.Add("CompetitionId", typeof(string));
+    table.Columns.Add("Goals", typeof(int));
+    table.Columns.Add("Assists", typeof(int));
+    table.Columns.Add("MinutesPlayed", typeof(int));
+    table.Columns.Add("YellowCards", typeof(int));
+    table.Columns.Add("RedCards", typeof(int));
+
+    foreach (var a in appearances)
+        table.Rows.Add(a.AppearanceId, a.GameId, a.PlayerId, a.Date,
+                       (object?)a.CompetitionId ?? DBNull.Value,      // null must be DBNull for SqlBulkCopy
+                       a.Goals, a.Assists, a.MinutesPlayed, a.YellowCards, a.RedCards);
+
+    // CheckConstraints: keep the foreign keys enforced (SqlBulkCopy skips them by default!)
+    using var bulk = new SqlBulkCopy(connectionString, SqlBulkCopyOptions.CheckConstraints)
+    {
+        DestinationTableName = "Appearances",
+        BatchSize = 10_000,
+        BulkCopyTimeout = 0      // no time limit
+    };
+
+    foreach (DataColumn column in table.Columns)
+        bulk.ColumnMappings.Add(column.ColumnName, column.ColumnName);
+
+    bulk.WriteToServer(table);
+}
+
+
+// ---------------------------------------------------------------------
+// 6. Verify: did everything really arrive?
+// ---------------------------------------------------------------------
+using (var checkDb = new AlbicelesteDbContext(options))
+{
+    int inDb = checkDb.Appearances.Count();
+    Console.WriteLine(inDb == appearances.Count
+        ? $"✅ Verified: {inDb:N0} appearances in the database"
+        : $"❌ MISMATCH: expected {appearances.Count:N0} but found {inDb:N0}");
+}

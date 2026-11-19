@@ -16,4 +16,6 @@ public class Player
     public int? CurrentClubId { get; set; }      // foreign key → Club
     public Club? CurrentClub { get; set; }       // navigation property
     
+    public List<Appearance> Appearances { get; set; } = new();
+    
 }
