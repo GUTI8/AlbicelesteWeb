@@ -1,0 +1,47 @@
+@page "/stats"
+@attribute [StreamRendering]
+@using AlbicelesteWeb.Data
+@using Microsoft.EntityFrameworkCore
+@inject IDbContextFactory<AlbicelesteDbContext> DbFactory
+
+<PageTitle>Stats</PageTitle>
+
+<h1>Database stats</h1>
+
+@if (stats is null)
+{
+    <p>Loading…</p>
+}
+else
+{
+    <ul>
+        <li>Players: @stats.Players.ToString("N0")</li>
+        <li>Active Argentines: @stats.ActiveArgentines.ToString("N0")</li>
+        <li>Appearances: @stats.Appearances.ToString("N0")</li>
+        <li>Leagues: @stats.LeagueCount.ToString("N0")</li>
+    </ul>
+}
+
+@code {
+    private StatsModel? stats;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await using var db = await DbFactory.CreateDbContextAsync();
+
+        int latest = await db.Players.MaxAsync(p => p.LastSeason);
+
+        stats = new StatsModel(
+            Players: await db.Players.CountAsync(),
+            ActiveArgentines: await db.Players.CountAsync(p => p.CountryOfCitizenship == "Argentina" && p.LastSeason == latest),
+            LeagueCount: await db.Players
+                .Where(p => p.CountryOfCitizenship == "Argentina" && p.LastSeason == latest
+                                                                  && p.CurrentClubDomesticCompetitionId != null)   // 1. which players
+                .Select(p => p.CurrentClubDomesticCompetitionId)            // 2. → their league codes
+                .Distinct()                                                  // 3. unique codes
+                .CountAsync(),                                               // 4. count them
+            Appearances: await db.Appearances.CountAsync());
+    }
+
+    private record StatsModel(int Players, int ActiveArgentines, int LeagueCount, int Appearances);
+}

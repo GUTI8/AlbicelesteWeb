@@ -24,8 +24,6 @@ public static class LessonE5
             Console.WriteLine($"   {c.Code ?? "(null)",-10} {c.Count:N0}");
         
         
-        
-        
         SqlLog.Section("Longest values (check BEFORE shrinking columns)");
         Console.WriteLine($"Longest player name:  {db.Players.Max(p => p.Name.Length)}");
         Console.WriteLine($"Longest club name:    {db.Players.Max(p => p.CurrentClubName!.Length)}");
