@@ -1,0 +1,152 @@
+@page "/players/{PlayerId:int}"
+@attribute [StreamRendering]
+@using AlbicelesteWeb.Web.Services
+@inject ProfileService Profiles
+
+<PageTitle>@(profile?.Name ?? "Player") · Albiceleste Stats</PageTitle>
+
+<a class="back" href="players">← Back to players</a>
+
+@if (loading)
+{
+    <p class="loading">Loading player…</p>
+}
+else if (profile is null)
+{
+    <section class="not-found">
+        <div class="kicker">Player not found</div>
+        <h1>No player with id @PlayerId</h1>
+        <p>The link may be wrong, or the player isn't in this dataset.</p>
+        <a class="btn-flat primary" href="players">Search players</a>
+    </section>
+}
+else
+{
+    <section class="profile-band" aria-label="Player summary">
+        <div class="who">
+            <div class="kicker on-dark">Player profile</div>
+            <h1>@profile.Name</h1>
+            <div class="chips">
+                <span class="chip">@profile.Position · @profile.SubPosition</span>
+                @if (profile.Age is not null)
+                {
+                    <span class="chip">Age @profile.Age</span>
+                }
+                @if (!string.IsNullOrEmpty(profile.Foot))
+                {
+                    <span class="chip">@profile.Foot foot</span>
+                }
+                <span class="chip">@profile.Country</span>
+            </div>
+        </div>
+        <dl class="facts">
+            <dt>Club</dt>
+            <dd>@(profile.Club ?? "Unknown")</dd>
+            <dt>League</dt>
+            <dd>@(profile.League ?? "Unknown")</dd>
+            <dt>Market value</dt>
+            <dd>@Format.Euros(profile.MarketValue)</dd>
+        </dl>
+    </section>
+
+    <section class="kpi-row" aria-label="Career totals">
+        <KpiCard Label="Appearances" Value="@totals.Apps.ToString("N0")" Code="g.Count()" />
+        <KpiCard Label="Goals" Value="@totals.Goals.ToString("N0")" Code="g.Sum(a => a.Goals)" />
+        <KpiCard Label="Assists" Value="@totals.Assists.ToString("N0")" Code="g.Sum(a => a.Assists)" />
+        <KpiCard Label="Goals per 90" Value="@totals.GoalsPer90.ToString("0.00")" Code="Goals * 90.0 / Minutes" />
+    </section>
+
+    <div class="panel-grid">
+
+        <section class="card-panel wide" aria-labelledby="season-h">
+            <div class="card-panel-head">
+                <h2 id="season-h">Career by season</h2>
+                <p>Calendar years in the dataset (2012 onwards, tracked competitions only)</p>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th scope="col">Year</th>
+                            <th scope="col" class="num">Apps</th>
+                            <th scope="col" class="num">Goals</th>
+                            <th scope="col" class="num">Assists</th>
+                            <th scope="col" class="num">Minutes</th>
+                            <th scope="col" class="num">Cards</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var s in seasons)
+                        {
+                            <tr>
+                                <td class="strong">@s.Year</td>
+                                <td class="num">@s.Apps</td>
+                                <td class="num strong">@s.Goals</td>
+                                <td class="num">@s.Assists</td>
+                                <td class="num">@s.Minutes.ToString("N0")</td>
+                                <td class="num">@s.YellowCards / @s.RedCards</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            @if (seasons.Count == 0)
+            {
+                <p class="empty">No appearances recorded for this player.</p>
+            }
+            <pre class="query"><span class="comment">// GROUP BY DATEPART(year, Date) in SQL Server</span>
+db.Appearances
+  .Where(a => a.PlayerId == playerId)
+  .GroupBy(a => a.Date.Year)
+  .Select(g => <span class="accent">new</span> { Year = g.Key, Apps = g.Count(),
+      Goals = g.Sum(a => a.Goals), … })
+  .OrderByDescending(x => x.Year)</pre>
+        </section>
+
+        <section class="card-panel" aria-labelledby="comp-h">
+            <div class="card-panel-head">
+                <h2 id="comp-h">Goals by competition</h2>
+                <p>Top 6 competitions by goals</p>
+            </div>
+            <div class="card-panel-body">
+                <BarList Items="goalsByCompetition" />
+            </div>
+            <pre class="query"><span class="comment">// Exercise 3: GroupBy + a dictionary of names</span>
+db.Appearances
+  .Where(a => a.PlayerId == playerId)
+  .GroupBy(a => a.CompetitionId)
+  .Select(g => <span class="accent">new</span> { g.Key, Goals = g.Sum(a => a.Goals) })
+  …</pre>
+        </section>
+
+    </div>
+}
+
+@code {
+    // Filled from the URL: /players/28003 → PlayerId = 28003
+    [Parameter] public int PlayerId { get; set; }
+
+    private PlayerProfile? profile;
+    private List<SeasonRow> seasons = new();
+    private CareerTotals totals = new(0, 0, 0, 0);
+    private List<BarItem> goalsByCompetition = new();
+    private bool loading = true;
+
+    // Runs whenever the parameters are set, including when the same page component
+    // is reused for a DIFFERENT player id. OnInitializedAsync would only run once.
+    protected override async Task OnParametersSetAsync()
+    {
+        loading = true;
+
+        profile = await Profiles.GetProfileAsync(PlayerId);
+
+        if (profile is not null)
+        {
+            seasons = await Profiles.GetSeasonsAsync(PlayerId);
+            totals = CareerTotals.FromSeasons(seasons);
+            goalsByCompetition = await Profiles.GetGoalsByCompetitionAsync(PlayerId);
+        }
+
+        loading = false;
+    }
+}

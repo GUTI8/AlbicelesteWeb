@@ -77,7 +77,7 @@
                     foreach (var row in result.Items)
                     {
                         <tr>
-                            <td class="name">@row.Name</td>
+                            <td class="name"><a href="players/@row.PlayerId">@row.Name</a></td>
                             <td>
                                 <span class="badge">@row.Position</span>
                                 <span class="sub">@row.SubPosition</span>

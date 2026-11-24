@@ -96,3 +96,271 @@ a {
 
 .query .comment { color: var(--on-dark-muted); }
 .query .accent  { color: var(--celeste); }
+
+
+/* Styles that only apply to the Dashboard page (CSS isolation) */
+
+.dash-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 28px;
+}
+
+.dash-title {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.dash-title h1 {
+    margin: 0;
+    font-size: 34px;
+    letter-spacing: 2px;
+    line-height: 1.1;
+}
+
+.subtitle {
+    margin: 0;
+    font-size: 16px;
+    color: var(--muted);
+}
+
+.dash-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.loading {
+    font-size: 16px;
+    color: var(--muted);
+}
+
+.kpi-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+}
+
+.panel-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+    gap: 20px;
+    align-items: stretch;
+}
+
+/* Most valuable list */
+.ranked {
+    list-style: none;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.ranked li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 52px;
+    border-bottom: 1px solid var(--line);
+}
+
+.ranked li:last-child {
+    border-bottom: 0;
+}
+
+.rank {
+    width: 18px;
+    font-weight: 700;
+    color: var(--celeste-deep);
+}
+
+.who {
+    flex: 1;
+    min-width: 0;
+}
+
+.name {
+    display: block;
+    font-weight: 700;
+    font-size: 15px;
+}
+
+.club {
+    font-size: 13px;
+    color: var(--muted);
+}
+
+.value {
+    font-weight: 700;
+    font-size: 15px;
+}
+
+
+.back {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    margin-bottom: 12px;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--celeste-deep);
+}
+
+.loading,
+.empty {
+    color: var(--muted);
+}
+
+.empty {
+    margin: 0;
+    padding: 20px 22px;
+}
+
+/* ---------- Not found ---------- */
+.not-found {
+    background: #FFFFFF;
+    border-top: 4px solid var(--celeste);
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.not-found h1 {
+    margin: 0;
+    font-size: 24px;
+}
+
+.not-found p {
+    margin: 0;
+    color: var(--muted);
+}
+
+/* ---------- Charcoal header band ---------- */
+.profile-band {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 28px;
+    background: var(--charcoal);
+    color: #FFFFFF;
+    border-left: 8px solid var(--celeste);
+    padding: 28px 32px;
+    margin-bottom: 20px;
+}
+
+.who {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1 1 320px;
+    min-width: 0;
+}
+
+.kicker.on-dark {
+    color: var(--celeste);
+}
+
+.who h1 {
+    margin: 0;
+    font-size: 32px;
+    line-height: 1.15;
+    letter-spacing: 2px;
+}
+
+.chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.chip {
+    padding: 5px 10px;
+    background: var(--charcoal-2);
+    color: #FFFFFF;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.facts {
+    margin: 0;
+    display: grid;
+    grid-template-columns: auto auto;
+    gap: 8px 24px;
+    align-items: baseline;
+}
+
+.facts dt {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--celeste);
+}
+
+.facts dd {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+/* ---------- Grids (same as the dashboard; a candidate for theme.css!) ---------- */
+.kpi-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.panel-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+    gap: 20px;
+    align-items: stretch;
+}
+
+/* ---------- Season table ---------- */
+.table-wrap {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    min-width: 460px;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+th {
+    text-align: left;
+    padding: 10px 22px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+td {
+    padding: 9px 22px;
+    border-top: 1px solid var(--line);
+}
+
+.num {
+    text-align: right;
+}
+
+.strong {
+    font-weight: 700;
+}

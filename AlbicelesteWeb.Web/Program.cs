@@ -13,6 +13,7 @@ builder.Services.AddDbContextFactory<AlbicelesteDbContext>(options =>
 
 builder.Services.AddScoped<DashboardService>();
 builder.Services.AddScoped<PlayerService>();
+builder.Services.AddScoped<ProfileService>();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()

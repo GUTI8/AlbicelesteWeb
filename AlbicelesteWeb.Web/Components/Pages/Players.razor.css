@@ -205,3 +205,6 @@ td {
 .sql-panel .query {
     white-space: pre-wrap;
 }
+
+.name a { color: var(--ink); text-decoration: none; }
+.name a:hover { color: var(--celeste-deep); text-decoration: underline; }
