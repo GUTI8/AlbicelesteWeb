@@ -1,6 +1,7 @@
 using AlbicelesteWeb.Web.Components;
 using AlbicelesteWeb.Data;
 using Microsoft.EntityFrameworkCore;
+using AlbicelesteWeb.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +10,8 @@ var connectionString = builder.Configuration.GetConnectionString("Albiceleste")
 
 builder.Services.AddDbContextFactory<AlbicelesteDbContext>(options =>
     options.UseSqlServer(connectionString));
+
+builder.Services.AddScoped<DashboardService>();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()

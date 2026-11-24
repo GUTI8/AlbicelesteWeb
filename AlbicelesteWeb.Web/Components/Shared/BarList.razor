@@ -1,0 +1,36 @@
+@using System.Globalization
+@using AlbicelesteWeb.Web.Services
+
+@* A simple horizontal bar list: label, bar, value. Bars always start at 0. *@
+
+<div class="bars">
+    @foreach (var item in Items)
+    {
+        <div class="bar-row">
+            <span class="bar-label">@item.Label</span>
+            <span class="bar-track"><span class="bar-fill" style="width: @WidthPercent(item)%"></span></span>
+            <span class="bar-value">@item.Display</span>
+        </div>
+    }
+
+    @if (Items.Count == 0)
+    {
+        <p class="empty">No data yet.</p>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public List<BarItem> Items { get; set; } = new();
+
+    // Optional fixed maximum (e.g. 30 years). Without it, the biggest item is 100%.
+    [Parameter] public double? Max { get; set; }
+
+    private string WidthPercent(BarItem item)
+    {
+        double max = Max ?? (Items.Count == 0 ? 1 : Items.Max(i => i.Value));
+        double percent = max <= 0 ? 0 : item.Value / max * 100;
+
+        // CSS always needs a dot as the decimal separator, whatever the server's culture
+        return percent.ToString("0.#", CultureInfo.InvariantCulture);
+    }
+}

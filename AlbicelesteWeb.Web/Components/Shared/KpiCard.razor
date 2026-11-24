@@ -1,0 +1,16 @@
+@* One headline number, with the LINQ that calculates it *@
+
+<div class="kpi">
+    <div class="kpi-label">@Label</div>
+    <div class="kpi-value">@Value</div>
+    @if (!string.IsNullOrEmpty(Code))
+    {
+        <code class="kpi-code">@Code</code>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string Label { get; set; } = "";
+    [Parameter, EditorRequired] public string Value { get; set; } = "";
+    [Parameter] public string? Code { get; set; }
+}

@@ -1,11 +1,116 @@
 ﻿@page "/"
+@attribute [StreamRendering]
+@using AlbicelesteWeb.Web.Services
+@inject DashboardService Dashboard
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Dashboard · Albiceleste Stats</PageTitle>
 
-<h1>Hello, world!</h1>
+<header class="dash-header">
+    <div class="dash-title">
+        <div class="kicker">Live from SQL Server</div>
+        <h1>Dashboard</h1>
+        <p class="subtitle">Active Argentine players · latest season in the data</p>
+    </div>
+    <div class="dash-actions">
+        <a class="btn-flat primary" href="stats">Database stats</a>
+    </div>
+</header>
 
-Welcome to your new app.
+@if (kpis is null)
+{
+    <p class="loading">Loading the latest numbers…</p>
+}
+else
+{
+    <section class="kpi-row" aria-label="Key numbers">
+        <KpiCard Label="Active players" Value="@kpis.ActivePlayers.ToString("N0")" Code="CountAsync()" />
+        <KpiCard Label="Total market value" Value="@Format.Euros(kpis.TotalMarketValue)" Code="SumAsync(p => p.MarketValueInEur)" />
+        <KpiCard Label="Average age" Value="@kpis.AverageAge.ToString("0.0")" Code=".Average(d => AgeOf(d))" />
+        <KpiCard Label="Leagues" Value="@kpis.Leagues.ToString()" Code=".Distinct().CountAsync()" />
+    </section>
 
-@* <h2>Counters</h2> *@
-@* <Counter IncrementAmount="1" /> *@
-@* <Counter IncrementAmount="10" /> *@
+    <div class="panel-grid">
+
+        <section class="card-panel" aria-labelledby="mv-h">
+            <div class="card-panel-head">
+                <h2 id="mv-h">Most valuable</h2>
+                <p>Top 5 by market value</p>
+            </div>
+            <ol class="ranked card-panel-body">
+                @for (int i = 0; i < mostValuable.Count; i++)
+                {
+                    var player = mostValuable[i];
+                    <li>
+                        <span class="rank">@(i + 1)</span>
+                        <span class="who">
+                            <span class="name">@player.Name</span>
+                            <span class="club">@(player.Club ?? "Unknown club")</span>
+                        </span>
+                        <span class="value">@Format.Euros(player.MarketValue)</span>
+                    </li>
+                }
+            </ol>
+            <pre class="query"><span class="comment">// EF Core → SQL: TOP(5) … ORDER BY … DESC</span>
+ActiveArgentines(db)
+  .OrderByDescending(p => p.MarketValueInEur)
+  .Take(<span class="accent">5</span>)
+  .Select(p => <span class="accent">new</span> RankedPlayer(p.Name,
+      p.CurrentClub.Name, p.MarketValueInEur))
+  .<span class="accent">ToListAsync</span>();</pre>
+        </section>
+
+        <section class="card-panel" aria-labelledby="wp-h">
+            <div class="card-panel-head">
+                <h2 id="wp-h">Where they play</h2>
+                <p>Active Argentines by league country</p>
+            </div>
+            <div class="card-panel-body">
+                <BarList Items="topCountries" />
+            </div>
+            <pre class="query"><span class="comment">// Join + GroupBy → SQL GROUP BY</span>
+active
+  .Join(db.Competitions,
+        p => p.CurrentClubDomesticCompetitionId,
+        c => c.CompetitionId,
+        (p, c) => c.CountryName)
+  .GroupBy(country => country)
+  .Select(g => <span class="accent">new</span> { Country = g.Key, Players = g.Count() })
+  .OrderByDescending(x => x.Players).Take(<span class="accent">8</span>)</pre>
+        </section>
+
+        <section class="card-panel" aria-labelledby="ag-h">
+            <div class="card-panel-head">
+                <h2 id="ag-h">Age by position</h2>
+                <p>Average age of active Argentines (bars from 0 to 30)</p>
+            </div>
+            <div class="card-panel-body">
+                <BarList Items="ageByPosition" Max="30" />
+            </div>
+            <pre class="query"><span class="comment">// 1,099 rows: small enough to finish in C#</span>
+<span class="accent">var</span> rows = <span class="accent">await</span> active
+    .Select(p => <span class="accent">new</span> { p.Position, p.DateOfBirth })
+    .ToListAsync();
+
+rows.GroupBy(r => r.Position)
+    .Select(g => <span class="accent">new</span> { g.Key,
+        Age = g.Average(r => AgeOf(r.DateOfBirth!.Value)) })</pre>
+        </section>
+
+    </div>
+}
+
+@code {
+    private DashboardKpis? kpis;
+    private List<RankedPlayer> mostValuable = new();
+    private List<BarItem> topCountries = new();
+    private List<BarItem> ageByPosition = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Each method creates its own short-lived DbContext through the factory
+        kpis          = await Dashboard.GetKpisAsync();
+        mostValuable  = await Dashboard.GetMostValuableAsync();
+        topCountries  = await Dashboard.GetTopCountriesAsync();
+        ageByPosition = await Dashboard.GetAgeByPositionAsync();
+    }
+}

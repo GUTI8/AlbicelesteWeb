@@ -1,0 +1,31 @@
+.kpi {
+    background: var(--charcoal);
+    color: #FFFFFF;
+    padding: 22px 22px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.kpi-label {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--celeste);
+}
+
+.kpi-value {
+    font-size: 44px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.kpi-code {
+    align-self: flex-start;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--on-dark-muted);
+    background: var(--charcoal-2);
+    padding: 5px 8px;
+}

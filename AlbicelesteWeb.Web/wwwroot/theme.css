@@ -1,0 +1,98 @@
+/* =====================================================================
+   Albiceleste Stats theme
+   Bold, high-contrast look: charcoal blocks, one light-blue accent,
+   flat buttons and wide uppercase headings.
+   Shared styles live here; component-only styles live in *.razor.css.
+   ===================================================================== */
+
+:root {
+    --ink: #15191E;            /* main text on light backgrounds */
+    --muted: #5A6470;          /* secondary text on light backgrounds */
+    --charcoal: #1F2226;       /* sidebar, KPI cards, code strips */
+    --charcoal-2: #2C3036;     /* chips on charcoal */
+    --on-dark-muted: #AEB6BF;  /* secondary text on charcoal */
+    --celeste: #74ACDF;        /* accent: fills and text on charcoal */
+    --celeste-deep: #1D5C96;   /* accent for text and bars on white */
+    --navy: #0B2545;           /* text on celeste */
+    --surface: #F4F6F8;        /* page background */
+    --line: #E4E8EC;           /* dividers, bar tracks */
+
+    --font-display: "Michroma", sans-serif;
+    --font-body: "Barlow", system-ui, sans-serif;
+    --font-mono: "JetBrains Mono", monospace;
+}
+
+html, body {
+    font-family: var(--font-body);
+    color: var(--ink);
+    background: var(--surface);
+}
+
+h1, h2 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+}
+
+a {
+    color: var(--celeste-deep);
+}
+
+/* Small uppercase label above a heading */
+.kicker {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--celeste-deep);
+}
+
+/* Flat, square buttons */
+.btn-flat {
+    display: inline-flex;
+    align-items: center;
+    min-height: 46px;
+    padding: 0 24px;
+    border: 0;
+    border-radius: 0;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    text-decoration: none;
+}
+
+.btn-flat.primary { background: var(--celeste); color: var(--navy); }
+.btn-flat.dark    { background: var(--charcoal); color: #FFFFFF; }
+.btn-flat:hover   { filter: brightness(1.08); }
+
+/* White panel with the light-blue top bar */
+.card-panel {
+    background: #FFFFFF;
+    border-top: 4px solid var(--celeste);
+    display: flex;
+    flex-direction: column;
+}
+
+.card-panel-head { padding: 22px 22px 6px; }
+.card-panel-head h2 { margin: 0; font-size: 15px; }
+.card-panel-head p { margin: 6px 0 0; font-size: 14px; color: var(--muted); }
+.card-panel-body { padding: 12px 22px 18px; }
+
+/* The dark strip that shows the LINQ behind each card */
+.query {
+    margin: auto 0 0;
+    padding: 16px 20px;
+    background: var(--charcoal);
+    color: #E6EAEE;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    line-height: 1.65;
+    white-space: pre;
+    overflow-x: auto;
+    border-radius: 0;
+}
+
+.query .comment { color: var(--on-dark-muted); }
+.query .accent  { color: var(--celeste); }

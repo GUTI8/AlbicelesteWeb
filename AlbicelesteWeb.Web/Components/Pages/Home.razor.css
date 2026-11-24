@@ -1,0 +1,101 @@
+/* Styles that only apply to the Dashboard page (CSS isolation) */
+
+.dash-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 28px;
+}
+
+.dash-title {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.dash-title h1 {
+    margin: 0;
+    font-size: 34px;
+    letter-spacing: 2px;
+    line-height: 1.1;
+}
+
+.subtitle {
+    margin: 0;
+    font-size: 16px;
+    color: var(--muted);
+}
+
+.dash-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.loading {
+    font-size: 16px;
+    color: var(--muted);
+}
+
+.kpi-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+}
+
+.panel-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+    gap: 20px;
+    align-items: stretch;
+}
+
+/* Most valuable list */
+.ranked {
+    list-style: none;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.ranked li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 52px;
+    border-bottom: 1px solid var(--line);
+}
+
+.ranked li:last-child {
+    border-bottom: 0;
+}
+
+.rank {
+    width: 18px;
+    font-weight: 700;
+    color: var(--celeste-deep);
+}
+
+.who {
+    flex: 1;
+    min-width: 0;
+}
+
+.name {
+    display: block;
+    font-weight: 700;
+    font-size: 15px;
+}
+
+.club {
+    font-size: 13px;
+    color: var(--muted);
+}
+
+.value {
+    font-weight: 700;
+    font-size: 15px;
+}
