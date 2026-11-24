@@ -1,5 +1,21 @@
 ﻿@page "/not-found"
 @layout MainLayout
 
-<h3>Not Found</h3>
-<p>Sorry, the content you are looking for does not exist.</p>
+<PageTitle>Page not found · Albiceleste Stats</PageTitle>
+
+<header class="page-header">
+    <div class="kicker">Error 404</div>
+    <h1>Page not found</h1>
+    <p class="subtitle">That address doesn't match any page in Albiceleste Stats.</p>
+</header>
+
+<section class="card-panel" aria-label="Where to go next">
+    <div class="card-panel-head">
+        <h2>Where to next?</h2>
+        <p>Try the dashboard, or search for a player.</p>
+    </div>
+    <div class="card-panel-body" style="display: flex; flex-wrap: wrap; gap: 12px;">
+        <a class="btn-flat primary" href="">Dashboard</a>
+        <a class="btn-flat dark" href="players">Search players</a>
+    </div>
+</section>

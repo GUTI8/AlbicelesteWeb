@@ -4,22 +4,36 @@
 @using Microsoft.EntityFrameworkCore
 @inject IDbContextFactory<AlbicelesteDbContext> DbFactory
 
-<PageTitle>Stats</PageTitle>
+<PageTitle>Database stats · Albiceleste Stats</PageTitle>
 
-<h1>Database stats</h1>
+<header class="page-header">
+    <div class="kicker">Behind the scenes</div>
+    <h1>Database stats</h1>
+    <p class="subtitle">Rows in each table of the SQL Server database</p>
+</header>
 
 @if (stats is null)
 {
-    <p>Loading…</p>
+    <p class="subtitle">Counting rows…</p>
 }
 else
 {
-    <ul>
-        <li>Players: @stats.Players.ToString("N0")</li>
-        <li>Active Argentines: @stats.ActiveArgentines.ToString("N0")</li>
-        <li>Appearances: @stats.Appearances.ToString("N0")</li>
-        <li>Leagues: @stats.LeagueCount.ToString("N0")</li>
-    </ul>
+    <section class="kpi-row" aria-label="Row counts">
+        <KpiCard Label="Players" Value="@stats.Players.ToString("N0")" Code="db.Players.CountAsync()" />
+        <KpiCard Label="Clubs" Value="@stats.Clubs.ToString("N0")" Code="db.Clubs.CountAsync()" />
+        <KpiCard Label="Competitions" Value="@stats.Competitions.ToString("N0")" Code="db.Competitions.CountAsync()" />
+        <KpiCard Label="Appearances" Value="@stats.Appearances.ToString("N0")" Code="db.Appearances.CountAsync()" />
+    </section>
+
+    <section class="card-panel" aria-labelledby="how-h">
+        <div class="card-panel-head">
+            <h2 id="how-h">How the data got here</h2>
+            <p>CSV files → Importer (CsvHelper, EF Core, SqlBulkCopy) → SQL Server → this app (EF Core, Blazor)</p>
+        </div>
+        <pre class="query"><span class="comment">// One short-lived DbContext per operation (Blazor Server)</span>
+<span class="accent">await using var</span> db = <span class="accent">await</span> DbFactory.CreateDbContextAsync();
+<span class="accent">int</span> appearances = <span class="accent">await</span> db.Appearances.CountAsync();</pre>
+    </section>
 }
 
 @code {
@@ -29,19 +43,12 @@ else
     {
         await using var db = await DbFactory.CreateDbContextAsync();
 
-        int latest = await db.Players.MaxAsync(p => p.LastSeason);
-
         stats = new StatsModel(
             Players: await db.Players.CountAsync(),
-            ActiveArgentines: await db.Players.CountAsync(p => p.CountryOfCitizenship == "Argentina" && p.LastSeason == latest),
-            LeagueCount: await db.Players
-                .Where(p => p.CountryOfCitizenship == "Argentina" && p.LastSeason == latest
-                                                                  && p.CurrentClubDomesticCompetitionId != null)   // 1. which players
-                .Select(p => p.CurrentClubDomesticCompetitionId)            // 2. → their league codes
-                .Distinct()                                                  // 3. unique codes
-                .CountAsync(),                                               // 4. count them
+            Clubs: await db.Clubs.CountAsync(),
+            Competitions: await db.Competitions.CountAsync(),
             Appearances: await db.Appearances.CountAsync());
     }
 
-    private record StatsModel(int Players, int ActiveArgentines, int LeagueCount, int Appearances);
+    private record StatsModel(int Players, int Clubs, int Competitions, int Appearances);
 }

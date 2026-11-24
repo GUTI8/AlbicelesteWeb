@@ -2,6 +2,7 @@
   <Project Path="AlbicelesteWeb.Data/AlbicelesteWeb.Data.csproj" />
   <Project Path="AlbicelesteWeb.Importer/AlbicelesteWeb.Importer.csproj" />
   <Project Path="AlbicelesteWeb.Playground/AlbicelesteWeb.Playground.csproj" />
+  <Project Path="AlbicelesteWeb.Tests/AlbicelesteWeb.Tests.csproj" />
   <Project Path="AlbicelesteWeb.Web/AlbicelesteWeb.Web.csproj" />
 </Solution>
 

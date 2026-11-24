@@ -21,6 +21,6 @@ using var db = new AlbicelesteDbContext(options);
 
 // Choose the lesson to run:
 //LessonE3.Run(db);
-//LessonE4.Run(db);
+// LessonE4.Run(db);
 //LessonE5.Run(db);
-LessonB3.Run(db);
+// LessonB3.Run(db);

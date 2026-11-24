@@ -45,7 +45,7 @@ public class DashboardService(IDbContextFactory<AlbicelesteDbContext> dbFactory)
             .Where(p => p.DateOfBirth != null)
             .Select(p => p.DateOfBirth!.Value)
             .ToListAsync();
-        double averageAge = birthDates.Count == 0 ? 0 : birthDates.Average(d => AgeOf(d));
+        double averageAge = birthDates.Count == 0 ? 0 : birthDates.Average(d => Ages.From(d));
 
         int leagues = await active
             .Where(p => p.CurrentClubDomesticCompetitionId != null)
@@ -115,20 +115,11 @@ public class DashboardService(IDbContextFactory<AlbicelesteDbContext> dbFactory)
             .Select(g => new
             {
                 Position = g.Key,
-                Age = g.Average(r => AgeOf(r.DateOfBirth!.Value))
+                Age = g.Average(r => Ages.From(r.DateOfBirth!.Value))
             })
             .OrderByDescending(x => x.Age)
             .Select(x => new BarItem(x.Position, x.Age, x. Age.ToString("0.0")))
             .ToList();
         
-    }
-
-
-    private static int AgeOf(DateTime dateOfBirth)
-    {
-        var today = DateTime.Today;
-        int age = today.Year - dateOfBirth.Year;
-        if (dateOfBirth.Date > today.AddYears(-age)) age--;
-        return age;
     }
 }
