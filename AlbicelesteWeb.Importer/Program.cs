@@ -26,11 +26,10 @@ string dataFolder = Path.Combine(AppContext.BaseDirectory, "data");
 var competitionRows = CsvLoader.Load<CompetitionCsv>(Path.Combine(dataFolder, "competitions.csv"));
 var clubRows        = CsvLoader.Load<ClubCsv>(Path.Combine(dataFolder, "clubs.csv"));
 var playerRows      = CsvLoader.Load<PlayerCsv>(Path.Combine(dataFolder, "players.csv"));
-var appearanceRows = CsvLoader.Load<AppearanceCsv>(Path.Combine(dataFolder, "appearances.csv"));
+var appearanceRows  = CsvLoader.Load<AppearanceCsv>(Path.Combine(dataFolder, "appearances.csv"));
 
-Console.WriteLine($"Read {appearanceRows.Count:N0} appearances");
-
-Console.WriteLine($"Read {competitionRows.Count} competitions, {clubRows.Count} clubs, {playerRows.Count:N0} players");
+Console.WriteLine($"Read {competitionRows.Count} competitions, {clubRows.Count} clubs, {playerRows.Count:N0} players, " +
+                  $"{appearanceRows.Count:N0} appearances");
 
 
 // ---------------------------------------------------------------------
@@ -121,18 +120,14 @@ Console.WriteLine($"Players with an unknown club:      {playersWithoutClub:N0}")
 // 4. Save to the database
 // ---------------------------------------------------------------------
 var options = new DbContextOptionsBuilder<AlbicelesteDbContext>()
-    .UseSqlServer(connectionString)
+    .UseSqlServer(connectionString, sql => sql.CommandTimeout(300))   // 5 minutes: big deletes over the internet
     .Options;
 
 using var db = new AlbicelesteDbContext(options);
 var sw = Stopwatch.StartNew();
 
-db.Appearances.ExecuteDelete();     // NEW: first line of the deletes
-db.Players.ExecuteDelete();
-db.Clubs.ExecuteDelete();
-db.Competitions.ExecuteDelete();
-
-// Delete children : a club can't be deleted while players still point to it
+// Delete children first: a club can't be deleted while players still point to it
+db.Appearances.ExecuteDelete();
 db.Players.ExecuteDelete();
 db.Clubs.ExecuteDelete();
 db.Competitions.ExecuteDelete();
@@ -146,7 +141,7 @@ int saved = db.SaveChanges();
 Console.WriteLine($"Saved {saved:N0} rows in {sw.ElapsedMilliseconds:N0} ms");
 
 // ---------------------------------------------------------------------
-// 5. Appearances: 1.7 million rows need a different approach
+// 5. Appearances: 1.9 million rows need a different approach
 // ---------------------------------------------------------------------
 bool useBulkCopy = true;   // run once with false (EF Core), then once with true (SqlBulkCopy), and compare
 
@@ -159,6 +154,21 @@ else
 Console.WriteLine($"Inserted {appearances.Count:N0} appearances in {sw.Elapsed.TotalSeconds:N1} s " +
                   $"({(useBulkCopy ? "SqlBulkCopy" : "EF Core in chunks")})");
 
+// ---------------------------------------------------------------------
+// 6. Verify: did everything really arrive?
+// ---------------------------------------------------------------------
+using (var checkDb = new AlbicelesteDbContext(options))
+{
+    int inDb = checkDb.Appearances.Count();
+    Console.WriteLine(inDb == appearances.Count
+        ? $"✅ Verified: {inDb:N0} appearances in the database"
+        : $"❌ MISMATCH: expected {appearances.Count:N0} but found {inDb:N0}");
+}
+
+
+// ---------------------------------------------------------------------
+// Helper methods: the two ways to insert the appearances
+// ---------------------------------------------------------------------
 
 // ----- Strategy 1: EF Core, 10,000 at a time -----
 static void EfInsertAppearances(DbContextOptions<AlbicelesteDbContext> options, List<Appearance> appearances)
@@ -203,23 +213,13 @@ static void BulkInsertAppearances(string connectionString, List<Appearance> appe
     {
         DestinationTableName = "Appearances",
         BatchSize = 10_000,
-        BulkCopyTimeout = 0      // no time limit
+        BulkCopyTimeout = 0,     // no time limit (default 30 s is too short over the internet)
+        NotifyAfter = 100_000    // raise SqlRowsCopied every 100,000 rows
     };
+    bulk.SqlRowsCopied += (_, e) => Console.WriteLine($"   {e.RowsCopied:N0} rows copied…");
 
     foreach (DataColumn column in table.Columns)
         bulk.ColumnMappings.Add(column.ColumnName, column.ColumnName);
 
     bulk.WriteToServer(table);
-}
-
-
-// ---------------------------------------------------------------------
-// 6. Verify: did everything really arrive?
-// ---------------------------------------------------------------------
-using (var checkDb = new AlbicelesteDbContext(options))
-{
-    int inDb = checkDb.Appearances.Count();
-    Console.WriteLine(inDb == appearances.Count
-        ? $"✅ Verified: {inDb:N0} appearances in the database"
-        : $"❌ MISMATCH: expected {appearances.Count:N0} but found {inDb:N0}");
 }

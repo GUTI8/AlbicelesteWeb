@@ -483,3 +483,6 @@ $RECYCLE.BIN/
 
 # do not include csvs going to github
 data/
+
+publish/
+app.zip

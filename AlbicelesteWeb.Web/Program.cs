@@ -8,8 +8,9 @@ var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("Albiceleste")
                        ?? throw new InvalidOperationException("Connection string 'Albiceleste' not found.");
 
-builder.Services.AddDbContextFactory<AlbicelesteDbContext>(options =>
-    options.UseSqlServer(connectionString));
+
+builder.Services.AddDbContextFactory<AlbicelesteDbContext>(o =>
+    o.UseSqlServer(connectionString, sql => sql.EnableRetryOnFailure()));
 
 builder.Services.AddScoped<DashboardService>();
 builder.Services.AddScoped<PlayerService>();
