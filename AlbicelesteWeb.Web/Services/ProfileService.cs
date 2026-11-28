@@ -1,5 +1,4 @@
 using AlbicelesteWeb.Data;
-using Microsoft.AspNetCore.Mvc.TagHelpers.Cache;
 using Microsoft.EntityFrameworkCore;
 
 namespace AlbicelesteWeb.Web.Services;
@@ -95,22 +94,12 @@ public class ProfileService(IDbContextFactory<AlbicelesteDbContext> dbFactory)
             .ToListAsync();
     }
 
-
-    // EXERCISE 3: goals per competition, top 6, with the competition NAME.
-    // Hints:
-    //   1. From db.Appearances, keep this player's rows.
-    //   2. GroupBy(a => a.CompetitionId), select the key and the sum of goals,
-    //      keep only groups with goals > 0, sort by goals descending, take 6, ToListAsync.
-    //   3. The names live in db.Competitions. Load them into a dictionary:
-    //        var names = await db.Competitions.ToDictionaryAsync(c => c.CompetitionId, c => c.Name);
-    //   4. In C#, turn each row into new BarItem(name, goals, goals.ToString()).
-    //      Use names.GetValueOrDefault(code) ?? code  in case a code has no name (remember COL1!).
+    // Goals per competition (top 6), with the competition's name
     public async Task<List<BarItem>> GetGoalsByCompetitionAsync(int playerId)
     {
         await using var db = await dbFactory.CreateDbContextAsync();
 
-        // 1.SQL: this players goals per competition, top 6
-
+        // 1. SQL: this player's goals per competition, top 6
         var rows = await db.Appearances
             .Where(a => a.PlayerId == playerId)
             .GroupBy(a => a.CompetitionId)
@@ -119,19 +108,17 @@ public class ProfileService(IDbContextFactory<AlbicelesteDbContext> dbFactory)
             .OrderByDescending(x => x.Goals)
             .Take(6)
             .ToListAsync();
-            
-        //2: SQL: The competitions names,as a look up table only 65 rows
+
+        // 2. SQL: the competition names as a lookup table (only 65 rows)
         var names = await db.Competitions
             .ToDictionaryAsync(c => c.CompetitionId, c => c.Name);
-        
-        //3:  C#: turn each row into a bar
+
+        // 3. C#: turn each row into a bar; unknown codes (like COL1) keep their code
         return rows
             .Select(r => new BarItem(
-                r.Code is null ? "Unknown" : names.GetValueOrDefault(r.Code) ?? r.Code, 
+                r.Code is null ? "Unknown" : names.GetValueOrDefault(r.Code) ?? r.Code,
                 r.Goals,
                 r.Goals.ToString()))
             .ToList();
-            
-        return new List<BarItem>();
     }
 }

@@ -53,6 +53,7 @@
 
 <section class="results" aria-label="Results">
     <div class="results-head">
+        <strong>@ResultsLabel</strong>
         <strong>@(result is null ? "…" : result.TotalCount.ToString("N0")) players</strong>
         @if (loading)
         {
@@ -61,7 +62,7 @@
     </div>
 
     <div class="table-wrap">
-        <table>
+        <table class="data-table">
             <thead>
                 <tr>
                     <th scope="col">Player</th>
@@ -167,4 +168,8 @@
         result = await PlayerService.SearchAsync(new PlayerQuery(search, position, activeOnly, sort, page, PageSize: 20));
         loading = false;
     }
+    
+    private string ResultsLabel => result is null
+        ? "…"
+        : $"{result.TotalCount:N0} {(result.TotalCount == 1 ? "player" : "players")}";
 }

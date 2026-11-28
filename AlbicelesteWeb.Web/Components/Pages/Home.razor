@@ -25,7 +25,7 @@ else
     <section class="kpi-row" aria-label="Key numbers">
         <KpiCard Label="Active players" Value="@kpis.ActivePlayers.ToString("N0")" Code="CountAsync()" />
         <KpiCard Label="Total market value" Value="@Format.Euros(kpis.TotalMarketValue)" Code="SumAsync(p => p.MarketValueInEur)" />
-        <KpiCard Label="Average age" Value="@kpis.AverageAge.ToString("0.0")" Code=".Average(d => AgeOf(d))" />
+        <KpiCard Label="Average age" Value="@kpis.AverageAge.ToString("0.0")" Code=".Average(d => Ages.From(d))" />
         <KpiCard Label="Leagues" Value="@kpis.Leagues.ToString()" Code=".Distinct().CountAsync()" />
     </section>
 
@@ -93,7 +93,7 @@ active
 
 rows.GroupBy(r => r.Position)
     .Select(g => <span class="accent">new</span> { g.Key,
-        Age = g.Average(r => AgeOf(r.DateOfBirth!.Value)) })</pre>
+        Age = g.Average(r => Ages.From(r.DateOfBirth!.Value)) })</pre>
         </section>
 
     </div>
